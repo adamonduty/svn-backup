@@ -1,0 +1,7 @@
+--- 
+:svn_root: repositories/
+:svnadmin: /usr/bin/svnadmin
+:svnlook: /usr/bin/svnlook
+:repositories: 
+:svn_backup: backup/
+:verbose: false
