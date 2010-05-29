@@ -1,0 +1,60 @@
+svn-easy-backup
+==============================================================================
+
+svn-easy-backup is a simple tool meant to make backing up multiple subversion
+repositories easy and efficient. Most of the tools that exist today are 
+overly complex, rely on specific svn backends or filesystems, create too 
+many unnecessary files, or otherwise don't fit my needs.
+
+svn-easy-backup generates portable subversion dumpfiles that can be loaded
+into nearly any repository. It relies on the little-known fact that 
+incremental dumpfiles can simply be /appended/ to an existing dumpfile.
+svn-easy-backup creates a full dumpfile on first run, and then continually
+appends to that dumpfile. In this way, 100 subversion repositories will only
+ever be contained within 100 dumpfiles, no matter how many times the backup
+process is run. You'll never again have to waste time combining N files 
+*per repository* in just the right order to restore your backup.
+
+svn-easy-backup maintains state from previous backups to ensure dumpfile
+integrity. It will refuse to append to a dumpfile that doesn't match 
+the previously generated file.
+
+The resulting dumpfiles can easily be backed up via tools such as rsync.
+Because svn-easy-backup only adds the differences between revisions to an
+existing file, rsync will be very bandwidth efficient.
+
+CONFIGURATION
+=============
+
+svn-easy-backup assumes that you have number of subversion repositories 
+located at a common root:
+
+  /var/svn
+    repository_1/
+    repository_2/
+    ...
+    repository_n/
+
+A sample configuration file (in YAML format) might look like this:
+
+--- 
+:svn_root: /var/svn
+:svnadmin: /usr/bin/svnadmin
+:svnlook: /usr/bin/svnlook
+:repositories:
+:svn_backup: /var/backup/svn
+:verbose: false
+
+In this case, subversion repositories will be inspected at /var/svn, and the
+resulting dumpfiles will be located at /var/backup/svn.
+
+As new repositories are added, state information about each one will appear in
+the :repositories section. 
+
+USAGE
+=====
+
+./svn-easy-backup.rb
+
+Currently it must be run in the same directory as its config file, and does
+not support any command line options.
