@@ -37,16 +37,16 @@ located at a common root:
 
 A sample configuration file (in YAML format) might look like this:
 
---- 
-:svn_root: /var/svn
-:svnadmin: /usr/bin/svnadmin
-:svnlook: /usr/bin/svnlook
-:svn_backup: /var/backup/svn
-:repository_state: /var/backup/repositories.yaml
-:gzip: true
-:gzip_path: /bin/gzip
-:gunzip_path: /bin/gunzip
-:verbose: false
+ --- 
+ :svn_root: /var/svn
+ :svnadmin: /usr/bin/svnadmin
+ :svnlook: /usr/bin/svnlook
+ :svn_backup: /var/backup/svn
+ :repository_state: /var/backup/repositories.yaml
+ :gzip: true
+ :gzip_path: /bin/gzip
+ :gunzip_path: /bin/gunzip
+ :verbose: false
 
 In this case, subversion repositories will be inspected at /var/svn, and the
 resulting dumpfiles will be located at /var/backup/svn.
@@ -69,10 +69,10 @@ svn-backup generates simple subversion dumpfiles that can be loaded with
 svnadmin.
 
 Step 1: Create an empty repository
-svnadmin create /var/svn/repository_1
+ svnadmin create /var/svn/repository_1
 
 Step 2: Load the dumpfile
-svnadmin load /var/svn/repository_1 < repository_1.dumpfile
+ svnadmin load /var/svn/repository_1 < repository_1.dumpfile
 
 Step 3: There is no step 3!
 
