@@ -2,6 +2,9 @@
 :svn_root: repositories/
 :svnadmin: /usr/bin/svnadmin
 :svnlook: /usr/bin/svnlook
-:repositories: 
 :svn_backup: backup/
+:repository_state: repositories.yaml
+:gzip: true
+:gzip_path: /bin/gzip
+:gunzip_path: /bin/gunzip
 :verbose: false
