@@ -83,3 +83,8 @@ A simple bash for loop can load all repositories at once:
 Or, if gzipped:
 
  for i in `ls *.dumpfile.gz`; do repository_name=`basename $i .dumpfile.gz`; svnadmin create $repository_name && zcat $i | svnadmin load $repository_name; done
+
+== License
+svn-backup is copyright 2010 Adam Lamar and distributed under the terms of 
+the GNU General Public License (GPL).  See the LICENSE file for further 
+information.
