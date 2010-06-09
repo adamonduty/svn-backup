@@ -7,4 +7,4 @@
 :gzip: true
 :gzip_path: /bin/gzip
 :gunzip_path: /bin/gunzip
-:verbose: false
+:quiet: false

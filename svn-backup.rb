@@ -18,7 +18,7 @@
 require 'yaml'; require 'fileutils'; require 'digest/md5'; require 'optparse'
 
 # parse options
-verbose = nil
+quiet = nil
 config_file = nil
 optparse = OptionParser.new do |opts|
   opts.banner = "Usage: svn-backup.rb [options]"
@@ -26,7 +26,7 @@ optparse = OptionParser.new do |opts|
     puts opts
     exit
   end
-  opts.on('-v', '--verbose', 'Output status information') { verbose = true }
+  opts.on('-q', '--quiet', 'Output less status information') { quiet = true }
   opts.on('-c', '--config FILE', 'Config file') { |file| config_file = file }
 end
 optparse.parse!
@@ -35,10 +35,10 @@ optparse.parse!
 config_file ||= 'svn-backup.yaml'
 FileUtils.touch config_file
 config = YAML::load(File.open(config_file))
-config[:svnadmin] ||= `which svnadmin`
-config[:svnlook] ||= `which svnlook`
+config[:svnadmin] ||= IO.popen("which svnadmin") {}
+config[:svnlook] ||= IO.popen("which svnlook") {}
 config[:repository_state] ||= 'repositories.yaml'
-config[:verbose] = verbose if verbose
+config[:quiet] = quiet if quiet
 
 FileUtils.mkdir_p config[:svn_backup]
 FileUtils.touch config[:repository_state]
@@ -64,21 +64,21 @@ repositories.sort!.each do |repository|
   repository_path = File.join(config[:svn_root], repository)
   full_backup = false
 
-  puts "[*] Inspecting #{repository_path}" if config[:verbose]
+  puts "[*] Inspecting #{repository_path}" unless config[:quiet]
   last_revision = repository_state[:repositories][repository.to_sym][:youngest]
-  youngest = `#{config[:svnlook]} youngest \"#{repository_path}\"`.chomp.to_i
+  youngest = IO.popen("#{config[:svnlook]} youngest \"#{repository_path}\"") { |f| f.read.chomp.to_i}
 
   # have we seen this before?
   if youngest and last_revision and youngest > last_revision and File.exist?(backup_file) and repository_state[:repositories][repository.to_sym][:md5]
       # decompress, if needed
       if config[:gzip]
-        puts "[*] Uncompressing #{backup_file}" if config[:verbose]
-        `#{config[:gunzip_path]} \"#{backup_file}\"`
+        puts "[*] Uncompressing #{backup_file}" unless config[:quiet]
+        IO.popen("#{config[:gunzip_path]} \"#{backup_file}\"") {}
         backup_file.chomp! '.gz'
       end
    
       # check integrity
-      puts "[*] Verifying integrity of #{backup_file}" if config[:verbose]
+      puts "[*] Verifying integrity of #{backup_file}" unless config[:quiet]
       if repository_state[:repositories][repository.to_sym][:md5] != Digest::MD5.hexdigest(File.read(backup_file))
         puts "[!] Refusing to perform incremental backup of repository \"#{repository_path}\""
         puts "[!] Previous backup \"#{backup_file}\" failed integrity check"
@@ -87,14 +87,14 @@ repositories.sort!.each do |repository|
       end
 
       # dump incremental
-      puts "[*] Dumping incremental revision #{last_revision + 1} to revision #{youngest}" if config[:verbose]
-      `#{config[:svnadmin]} dump -q -r #{last_revision + 1}:#{youngest} --incremental \"#{repository_path}\" >> \"#{backup_file}\"`
+      puts "[*] Dumping incremental revision #{last_revision + 1} to revision #{youngest}" unless config[:quiet]
+      IO.popen("#{config[:svnadmin]} dump -q -r #{last_revision + 1}:#{youngest} --incremental \"#{repository_path}\" >> \"#{backup_file}\" 2> /dev/null") {} 
   elsif (youngest and last_revision and youngest != last_revision) or (last_revision.nil?) or (!File.exist?(backup_file))
     # full backup
     full_backup = true
     backup_file.chomp! '.gz' if config[:gzip]
-    puts "[*] Dumping full backup to revision #{youngest}" if config[:verbose]
-    `#{config[:svnadmin]} dump -q -r 0:#{youngest} \"#{repository_path}\" > \"#{backup_file}\"`
+    puts "[*] Dumping full backup to revision #{youngest}" unless config[:quiet]
+    IO.popen("#{config[:svnadmin]} dump -q -r 0:#{youngest} \"#{repository_path}\" > \"#{backup_file}\" 2> /dev/null") {}
   end 
 
   if (youngest and last_revision and youngest > last_revision) or (full_backup)
@@ -104,8 +104,8 @@ repositories.sort!.each do |repository|
 
     # compress, if needed
     if config[:gzip]
-      puts "[*] Compressing #{backup_file}" if config[:verbose]
-      `#{config[:gzip_path]} -f \"#{backup_file}\"` 
+      puts "[*] Compressing #{backup_file}" unless config[:quiet]
+      IO.popen("#{config[:gzip_path]} -f \"#{backup_file}\"") {}
     end
   end
 end
