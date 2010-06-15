@@ -14,13 +14,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 require 'yaml'; require 'fileutils'; require 'digest/md5'; require 'optparse'
+version = '0.1.1'
 
 # parse options
 quiet = nil
 config_file = nil
 optparse = OptionParser.new do |opts|
+  opts.version = version
   opts.banner = "Usage: svn-backup.rb [options]"
   opts.on('-h', '--help', 'Usage information') do
     puts opts
