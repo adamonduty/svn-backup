@@ -54,7 +54,7 @@ STDERR.puts "couldn't find gzip or gunzip" && exit(-1) if !File.exist? config[:g
 # find repositories
 root = Dir.new config[:svn_root]
 repositories ||= []
-root.each {|entry| repositories << entry unless entry == '.' or entry == '..' }
+root.each {|entry| repositories << entry if !(entry == '.' or entry == '..') and (File.directory?(File.join(config[:svn_root], entry))) }
 
 # dump the repositories
 repositories.sort!.each do |repository|
@@ -79,7 +79,7 @@ repositories.sort!.each do |repository|
    
       # check integrity
       puts "[*] Verifying integrity of #{backup_file}" unless config[:quiet]
-      if repository_state[:repositories][repository.to_sym][:md5] != Digest::MD5.hexdigest(File.read(backup_file))
+      if repository_state[:repositories][repository.to_sym][:md5] != Digest::MD5.file(backup_file).to_s
         puts "[!] Refusing to perform incremental backup of repository \"#{repository_path}\""
         puts "[!] Previous backup \"#{backup_file}\" failed integrity check"
         repository_state[:repositories][repository.to_sym][:youngest] = nil
@@ -99,7 +99,7 @@ repositories.sort!.each do |repository|
 
   if (youngest and last_revision and youngest > last_revision) or (full_backup)
     # save for next time
-    repository_state[:repositories][repository.to_sym][:md5] = Digest::MD5.hexdigest(File.read(backup_file))
+    repository_state[:repositories][repository.to_sym][:md5] = Digest::MD5.file(backup_file).to_s
     repository_state[:repositories][repository.to_sym][:youngest] = youngest
 
     # compress, if needed
