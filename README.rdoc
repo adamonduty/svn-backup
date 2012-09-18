@@ -14,6 +14,14 @@ ever be contained within 100 dumpfiles, no matter how many times the backup
 process is run. You'll never again have to waste time combining N files 
 *per repository* in just the right order to restore your backup.
 
+This gives you the advantage of full backups at the smaller cost of an
+incremental.
+
+svn-backup will optionally compress your backups. Much like subversion
+dumpfiles, distinct gzip files can be concatenated to form one continuous
+compressed stream [1]. svn-backup utilizes this property to keep incremental
+backups fast on large repositories by avoiding a complete gunzip/gzip cycle.
+
 svn-backup maintains state from previous backups to ensure dumpfile
 integrity. It will refuse to append to a dumpfile that doesn't match 
 the previously generated file, but will instead generate a full
@@ -45,7 +53,6 @@ A sample configuration file (in YAML format) might look like this:
  :repository_state: /var/backup/repositories.yaml
  :gzip: true
  :gzip_path: /bin/gzip
- :gunzip_path: /bin/gunzip
  :quiet: false
 
 In this case, subversion repositories will be inspected at /var/svn, and the
@@ -85,7 +92,16 @@ Or, if gzipped:
 
  find . -type f -name "*.dumpfile.gz" | while read i; do repository_name=`basename "$i" .dumpfile.gz`; svnadmin create "$repository_name" && zcat "$i" | svnadmin load "$repository_name"; done
 
+== Upgrade
+
+Please note that upgrading from 0.1.x to 0.2.x will cause a full backup
+of every repository due to differing state information in repositories.yaml.
+
 == License
 svn-backup is copyright 2010 Adam Lamar and distributed under the terms of 
 the GNU General Public License (GPL).  See the LICENSE file for further 
 information.
+
+= References
+
+[1] http://www.gzip.org/zlib/rfc-gzip.html#file-format

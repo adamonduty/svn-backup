@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 require 'yaml'; require 'fileutils'; require 'digest/md5'; require 'optparse'
-version = '0.1.1'
+version = '0.2.1'
 
 # parse options
 quiet = debug = nil
