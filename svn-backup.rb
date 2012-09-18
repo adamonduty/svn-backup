@@ -18,7 +18,7 @@ require 'yaml'; require 'fileutils'; require 'digest/md5'; require 'optparse'
 version = '0.1.1'
 
 # parse options
-quiet = nil
+quiet = debug = nil
 config_file = nil
 optparse = OptionParser.new do |opts|
   opts.version = version
@@ -28,6 +28,7 @@ optparse = OptionParser.new do |opts|
     exit
   end
   opts.on('-q', '--quiet', 'Output less status information') { quiet = true }
+  opts.on('-d', '--debug', 'Output debug information') { debug = true }
   opts.on('-c', '--config FILE', 'Config file') { |file| config_file = file }
 end
 optparse.parse!
@@ -40,6 +41,7 @@ config[:svnadmin] ||= IO.popen("which svnadmin") {}
 config[:svnlook] ||= IO.popen("which svnlook") {}
 config[:repository_state] ||= 'repositories.yaml'
 config[:quiet] = quiet if quiet
+config[:debug] = debug if debug
 
 FileUtils.mkdir_p config[:svn_backup]
 FileUtils.touch config[:repository_state]
@@ -67,47 +69,48 @@ repositories.sort!.each do |repository|
 
   puts "[*] Inspecting #{repository_path}" unless config[:quiet]
   last_revision = repository_state[:repositories][repository.to_sym][:youngest]
-  youngest = IO.popen("#{config[:svnlook]} youngest \"#{repository_path}\"") { |f| f.read.chomp.to_i}
+  cmd = "#{config[:svnlook]} youngest \"#{repository_path}\""
+  STDERR.puts cmd if config[:debug]
+  youngest = IO.popen(cmd) { |f| f.read.chomp.to_i}
 
   # have we seen this before?
   if youngest and last_revision and youngest > last_revision and File.exist?(backup_file) and repository_state[:repositories][repository.to_sym][:md5]
-      # decompress, if needed
-      if config[:gzip]
-        puts "[*] Uncompressing #{backup_file}" unless config[:quiet]
-        IO.popen("#{config[:gunzip_path]} \"#{backup_file}\"") {}
-        backup_file.chomp! '.gz'
-      end
-   
-      # check integrity
-      puts "[*] Verifying integrity of #{backup_file}" unless config[:quiet]
-      if repository_state[:repositories][repository.to_sym][:md5] != Digest::MD5.file(backup_file).to_s
-        puts "[!] Refusing to perform incremental backup of repository \"#{repository_path}\""
-        puts "[!] Previous backup \"#{backup_file}\" failed integrity check"
-        repository_state[:repositories][repository.to_sym][:youngest] = nil
-        redo
-      end
+    # check integrity
+    puts "[*] Verifying integrity of #{backup_file}" unless config[:quiet]
+    if repository_state[:repositories][repository.to_sym][:md5] != Digest::MD5.file(backup_file).to_s
+      puts "[!] Refusing to perform incremental backup of repository \"#{repository_path}\""
+      puts "[!] Previous backup \"#{backup_file}\" failed integrity check"
+      repository_state[:repositories][repository.to_sym][:youngest] = nil
+      redo
+    end
 
-      # dump incremental
-      puts "[*] Dumping incremental revision #{last_revision + 1} to revision #{youngest}" unless config[:quiet]
-      IO.popen("#{config[:svnadmin]} dump -q -r #{last_revision + 1}:#{youngest} --incremental \"#{repository_path}\" >> \"#{backup_file}\" 2> /dev/null") {} 
+    # dump incremental
+    puts "[*] Dumping incremental revision #{last_revision + 1} to revision #{youngest}" unless config[:quiet]
+    if config[:gzip]
+      cmd = "#{config[:svnadmin]} dump -q -r #{last_revision + 1}:#{youngest} --incremental \"#{repository_path}\" | #{config[:gzip_path]} -c >> \"#{backup_file}\" 2> /dev/null"
+    else
+      cmd = "#{config[:svnadmin]} dump -q -r #{last_revision + 1}:#{youngest} --incremental \"#{repository_path}\" >> \"#{backup_file}\" 2> /dev/null"
+    end
+    STDERR.puts cmd if config[:debug]
+    IO.popen(cmd) {}
   elsif (youngest and last_revision and youngest != last_revision) or (last_revision.nil?) or (!File.exist?(backup_file))
     # full backup
     full_backup = true
-    backup_file.chomp! '.gz' if config[:gzip]
     puts "[*] Dumping full backup to revision #{youngest}" unless config[:quiet]
-    IO.popen("#{config[:svnadmin]} dump -q -r 0:#{youngest} \"#{repository_path}\" > \"#{backup_file}\" 2> /dev/null") {}
+    cmd = ''
+    if config[:gzip]
+      cmd = "#{config[:svnadmin]} dump -q -r 0:#{youngest} \"#{repository_path}\" | #{config[:gzip_path]} -c >> \"#{backup_file}\" 2> /dev/null"
+    else
+      cmd = "#{config[:svnadmin]} dump -q -r 0:#{youngest} \"#{repository_path}\" >> \"#{backup_file}\" 2> /dev/null"
+    end
+    STDERR.puts cmd if config[:debug]
+    IO.popen(cmd) {}
   end 
 
   if (youngest and last_revision and youngest > last_revision) or (full_backup)
     # save for next time
     repository_state[:repositories][repository.to_sym][:md5] = Digest::MD5.file(backup_file).to_s
     repository_state[:repositories][repository.to_sym][:youngest] = youngest
-
-    # compress, if needed
-    if config[:gzip]
-      puts "[*] Compressing #{backup_file}" unless config[:quiet]
-      IO.popen("#{config[:gzip_path]} -f \"#{backup_file}\"") {}
-    end
   end
 end
 repository_file = File.open(config[:repository_state], 'w')
