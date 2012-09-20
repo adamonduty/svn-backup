@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-# svn-backup.rb - A fast, efficient way to backup multiple subversion repositories
+# svn-backup.rb - An efficient way to backup multiple subversion repositories
 # Copyright (C) 2010 Adam Lamar
 #
 # This program is free software: you can redistribute it and/or modify
@@ -15,7 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 require 'yaml'; require 'fileutils'; require 'digest/md5'; require 'optparse'
-version = '0.2.1'
+require File.expand_path('../../lib/svn-backup/version', __FILE__)
+version = Svn::Backup::VERSION
 
 # parse options
 quiet = debug = nil
@@ -105,7 +106,7 @@ repositories.sort!.each do |repository|
     end
     STDERR.puts cmd if config[:debug]
     IO.popen(cmd) {}
-  end 
+  end
 
   if (youngest and last_revision and youngest > last_revision) or (full_backup)
     # save for next time
