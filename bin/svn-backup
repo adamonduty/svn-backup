@@ -38,6 +38,7 @@ optparse.parse!
 config_file ||= 'svn-backup.yaml'
 FileUtils.touch config_file
 config = YAML::load(File.open(config_file))
+config ||= {}
 config[:svnadmin] ||= IO.popen("which svnadmin") {}
 config[:svnlook] ||= IO.popen("which svnlook") {}
 config[:repository_state] ||= 'repositories.yaml'
