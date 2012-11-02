@@ -79,7 +79,7 @@ repository.
 
 ## Usage
 
- Usage: svn-backup.rb [options]
+ Usage: svn-backup [options]
     -h, --help                       Usage information
     -q, --quiet                      Output less status information
     -c, --config FILE                Config file
