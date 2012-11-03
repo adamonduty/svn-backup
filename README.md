@@ -51,14 +51,17 @@ Or install it yourself as:
 svn-backup assumes that you have number of subversion repositories
 located at a common root:
 
+```
   /var/svn
     repository_1/
     repository_2/
     ...
     repository_n/
+```
 
 A sample configuration file (in YAML format) might look like this:
 
+```
  ---
  :svn_root: /var/svn
  :svnadmin: /usr/bin/svnadmin
@@ -68,6 +71,7 @@ A sample configuration file (in YAML format) might look like this:
  :gzip: true
  :gzip_path: /bin/gzip
  :quiet: false
+```
 
 In this case, subversion repositories will be inspected at /var/svn, and the
 resulting dumpfiles will be located at /var/backup/svn.
@@ -79,11 +83,13 @@ repository.
 
 ## Usage
 
+```
  Usage: svn-backup [options]
     -h, --help                       Usage information
     -q, --quiet                      Output less status information
     -c, --config FILE                Config file
     -v, --version                    Version
+```
 
 ## Restoration
 
@@ -91,21 +97,23 @@ svn-backup generates simple subversion dumpfiles that can be loaded with
 svnadmin.
 
 Step 1: Create an empty repository
+```
  svnadmin create /var/svn/repository_1
-
+```
 Step 2: Load the dumpfile
+```
  svnadmin load /var/svn/repository_1 < repository_1.dumpfile
-
+```
 Step 3: There is no step 3!
 
 A simple bash command can load all repositories at once:
-
+```
  find . -type f -name "*.dumpfile" | while read i; do repository_name=`basename "$i" .dumpfile`; svnadmin create "$repository_name" && svnadmin load "$repository_name" < "$i"; done
-
+```
 Or, if gzipped:
-
+```
  find . -type f -name "*.dumpfile.gz" | while read i; do repository_name=`basename "$i" .dumpfile.gz`; svnadmin create "$repository_name" && zcat "$i" | svnadmin load "$repository_name"; done
-
+```
 ## Upgrade
 
 Please note that upgrading from 0.1.x to 0.2.x will cause a full backup
