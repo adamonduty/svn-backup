@@ -40,8 +40,9 @@ FileUtils.touch config_file
 config = YAML::load(File.open(config_file))
 abort('Could not find svn-backup.yaml config file; specify with -c') unless config
 
-config[:svnadmin] ||= IO.popen("which svnadmin") {}
-config[:svnlook] ||= IO.popen("which svnlook") {}
+config[:svnadmin] ||= IO.popen("which svnadmin") { |f| f.read.chomp }
+config[:svnlook] ||= IO.popen("which svnlook") { |f| f.read.chomp }
+config[:gzip_path] ||= IO.popen("which gzip") { |f| f.read.chomp }
 config[:repository_state] ||= 'repositories.yaml'
 config[:quiet] = quiet if quiet
 config[:debug] = debug if debug
@@ -55,7 +56,7 @@ repository_state[:repositories] ||= {}
 # sanity checks
 STDERR.puts "svn root doesn't exist" && exit(-1) unless File.exist? config[:svn_root]
 STDERR.puts "couldn't find svnadmin or svnlook" && exit(-1) if !File.exist? config[:svnadmin] or !File.exist? config[:svnlook]
-STDERR.puts "couldn't find gzip or gunzip" && exit(-1) if !File.exist? config[:gzip_path] or !File.exist? config[:gunzip_path]
+STDERR.puts "couldn't find gzip" && exit(-1) if !File.exist? config[:gzip_path]
 
 # find repositories
 root = Dir.new config[:svn_root]
