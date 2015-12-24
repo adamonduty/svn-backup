@@ -4,6 +4,7 @@
 :svnlook: /usr/bin/svnlook
 :svn_backup: backup/
 :repository_state: repositories.yaml
+:repo_pattern: .
 :gzip: true
 :gzip_path: /bin/gzip
 :quiet: false
