@@ -69,6 +69,8 @@ A sample configuration file (in YAML format) might look like this:
  :svn_backup: /var/backup/svn
  :repository_state: /var/backup/repositories.yaml
  :repo_pattern: .
+ :create_directories: true
+ :retention_size: 8
  :gzip: true
  :gzip_path: /bin/gzip
  :quiet: false
@@ -87,6 +89,7 @@ repository.
 ```
  Usage: svn-backup [options]
     -h, --help                       Usage information
+    -f, --full                       Force full backup
     -q, --quiet                      Output less status information
     -c, --config FILE                Config file
     -v, --version                    Version
