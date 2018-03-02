@@ -68,6 +68,7 @@ A sample configuration file (in YAML format) might look like this:
  :svnlook: /usr/bin/svnlook
  :svn_backup: /var/backup/svn
  :repository_state: /var/backup/repositories.yaml
+ :repo_pattern: .
  :create_directories: true
  :retention_size: 8
  :gzip: true

@@ -76,8 +76,14 @@ root = Dir.new config[:svn_root]
 repositories ||= []
 root.each {|entry| repositories << entry if !(entry == '.' or entry == '..') and (File.directory?(File.join(config[:svn_root], entry))) }
 
+# build filter for repository names, if required
+repo_pattern = Regexp::new(config[:repo_pattern]) unless !config[:repo_pattern]
+
 # dump the repositories
 repositories.sort!.each do |repository|
+
+  # filter on repository name, if required
+  next unless !repo_pattern or repo_pattern.match(repository)
 
   # set repository state
   repository_state[:repositories][repository.to_sym] ||= {}
