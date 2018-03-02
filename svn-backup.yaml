@@ -4,6 +4,8 @@
 :svnlook: /usr/bin/svnlook
 :svn_backup: backup/
 :repository_state: repositories.yaml
+:create_directories: true
+:retention_size: 8
 :gzip: true
 :gzip_path: /bin/gzip
 :quiet: false
